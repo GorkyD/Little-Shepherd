@@ -232,6 +232,9 @@ void BaseNpc::ApplyActionEffect(const Action* action)
 
 void BaseNpc::FaceZone(ZoneType zone)
 {
+    if (zone == ZoneType::Empty)
+        return;
+
     auto nearest = world->GetNearestTileOfType(zone, position);
 
     if (!nearest.has_value())

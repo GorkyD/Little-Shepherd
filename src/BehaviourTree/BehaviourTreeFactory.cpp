@@ -21,7 +21,17 @@ std::unique_ptr<Node> BehaviourTreeFactory::BuildBehaviorFor(BaseNpc* npc, const
     if (action->name == "SearchDanger")
         return BuildSearchDangerSequence(npc, action);
 
+    if (action->name == "WaitUntilPlaced")
+        return BuildWaitUntilPlacedSequence(npc, action);
+
     return BuildBaseMoveSequence(npc, action);
+}
+
+std::unique_ptr<Sequence> BehaviourTreeFactory::BuildWaitUntilPlacedSequence(BaseNpc* npc, const Action* action) const
+{
+    auto steps = std::vector<std::unique_ptr<Node>>();
+    steps.push_back(std::make_unique<WaitNode>(npc->GetWorkClipFor(action), action->name, ZoneType::Water));
+    return std::make_unique<Sequence>(std::move(steps));
 }
 
 std::unique_ptr<Selector> BehaviourTreeFactory::BuildSearchDangerSequence(BaseNpc* npc, const Action* action) const
