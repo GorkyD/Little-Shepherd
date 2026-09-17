@@ -1,4 +1,6 @@
 #include "RenderSystem.h"
+#include <algorithm>
+#include <cmath>
 #include "TileAtlas.h"
 
 void RenderSystem::Update()
@@ -17,6 +19,93 @@ void RenderSystem::Update()
 
             DrawTile(Grid::ToScreen(row, column), world->GetTile(row, column));
         }
+    }
+}
+
+namespace
+{
+    constexpr float BarnDoorAlignOffsetX = -13.0f;
+    constexpr float BarnDoorAlignOffsetY = -29.0f;
+}
+
+std::optional<float> RenderSystem::GetBarnBuildingAnchorY() const
+{
+    const auto footprint = world->GetZoneScreenFootprint(ZoneType::Barn);
+
+    if (!footprint.has_value())
+        return std::nullopt;
+
+    return footprint->y + footprint->height + BarnDoorAlignOffsetY;
+}
+
+std::optional<float> RenderSystem::GetBarnBuildingFrontDepth() const
+{
+    const auto anchorY = GetBarnBuildingAnchorY();
+
+    if (!anchorY.has_value())
+        return std::nullopt;
+
+    return *anchorY / (Grid::TileHeight / 2.0f);
+}
+
+void RenderSystem::DrawBarnBuilding() const
+{
+    const auto footprint = world->GetZoneScreenFootprint(ZoneType::Barn);
+    const auto anchorY = GetBarnBuildingAnchorY();
+
+    if (!footprint.has_value() || !anchorY.has_value())
+        return;
+
+    const Texture2D texture = GetBarnBuildingTexture();
+
+    if (texture.id == 0)
+        return;
+
+    const float drawWidth = footprint->width;
+    const float drawHeight = drawWidth * (static_cast<float>(texture.height) / static_cast<float>(texture.width));
+
+    const float anchorX = footprint->x + footprint->width / 2.0f + BarnDoorAlignOffsetX;
+
+    const Rectangle source = { 0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height) };
+    const Rectangle dest = { anchorX, *anchorY, drawWidth, drawHeight };
+    const Vector2 origin = { drawWidth / 2.0f, drawHeight * 0.8f };
+
+    DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
+}
+
+void RenderSystem::DrawSleepIndicator() const
+{
+    const auto footprint = world->GetZoneScreenFootprint(ZoneType::Barn);
+    const auto anchorY = GetBarnBuildingAnchorY();
+
+    if (!footprint.has_value() || !anchorY.has_value())
+        return;
+
+    constexpr float Pi = 3.14159265358979323846f;
+    constexpr float cycleDuration = 1.8f;
+    constexpr int zCount = 3;
+    constexpr float driftHeight = 34.0f;
+    constexpr float driftWidth = 16.0f;
+    constexpr float roofOffset = 130.0f;
+
+    const float baseX = footprint->x + footprint->width / 2.0f + BarnDoorAlignOffsetX;
+    const float baseY = *anchorY - roofOffset;
+
+    const float time = static_cast<float>(GetTime());
+
+    for (int i = 0; i < zCount; i++)
+    {
+        const float phase = std::fmod(time / cycleDuration + static_cast<float>(i) / zCount, 1.0f);
+
+        const float x = baseX + phase * driftWidth;
+        const float y = baseY - phase * driftHeight;
+
+        const float alpha = std::sin(phase * Pi);
+        const int fontSize = 14 + i * 4;
+
+        const Color color = { 255, 255, 255, static_cast<unsigned char>(std::clamp(alpha, 0.0f, 1.0f) * 255.0f) };
+
+        DrawText("Z", static_cast<int>(x), static_cast<int>(y), fontSize, color);
     }
 }
 

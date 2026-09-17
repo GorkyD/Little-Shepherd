@@ -90,3 +90,16 @@ Texture2D GetDigHoleTexture()
 
     return texture;
 }
+
+Texture2D GetBarnBuildingTexture()
+{
+    static Texture2D texture{};
+
+    if (texture.id == 0)
+    {
+        const std::string path = std::string(ASSETS_DIR) + "FreeCityBuilder/FreeAssets/Building_House4.png";
+        texture = LoadTexture(path.c_str());
+    }
+
+    return texture;
+}

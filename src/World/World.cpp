@@ -1,8 +1,10 @@
 ﻿#include "World.h"
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <random>
+#include "Grid.h"
 
 World::World() = default;
 
@@ -232,6 +234,72 @@ ZoneType World::GetZoneAt(const GridPos pos) const
     }
 
     return map[pos.row][pos.col].zone;
+}
+
+std::optional<Vector2> World::GetZoneScreenCenter(const ZoneType type) const
+{
+    const auto it = zoneTiles.find(type);
+
+    if (it == zoneTiles.end() || it->second.empty())
+        return std::nullopt;
+
+    int minRow = it->second[0].row, maxRow = minRow;
+    int minCol = it->second[0].col, maxCol = minCol;
+
+    for (const GridPos& tile : it->second)
+    {
+        minRow = std::min(minRow, tile.row);
+        maxRow = std::max(maxRow, tile.row);
+        minCol = std::min(minCol, tile.col);
+        maxCol = std::max(maxCol, tile.col);
+    }
+
+    return Grid::ToScreen((minRow + maxRow) / 2.0f, (minCol + maxCol) / 2.0f);
+}
+
+std::optional<Rectangle> World::GetZoneScreenFootprint(const ZoneType type) const
+{
+    const auto it = zoneTiles.find(type);
+
+    if (it == zoneTiles.end() || it->second.empty())
+        return std::nullopt;
+
+    int minRow = it->second[0].row, maxRow = minRow;
+    int minCol = it->second[0].col, maxCol = minCol;
+
+    for (const GridPos& tile : it->second)
+    {
+        minRow = std::min(minRow, tile.row);
+        maxRow = std::max(maxRow, tile.row);
+        minCol = std::min(minCol, tile.col);
+        maxCol = std::max(maxCol, tile.col);
+    }
+
+    const Vector2 corners[4] =
+    {
+        Grid::ToScreen(static_cast<float>(minRow), static_cast<float>(minCol)),
+        Grid::ToScreen(static_cast<float>(minRow), static_cast<float>(maxCol)),
+        Grid::ToScreen(static_cast<float>(maxRow), static_cast<float>(minCol)),
+        Grid::ToScreen(static_cast<float>(maxRow), static_cast<float>(maxCol))
+    };
+
+    float minX = corners[0].x, maxX = corners[0].x;
+    float minY = corners[0].y, maxY = corners[0].y;
+
+    for (const Vector2& corner : corners)
+    {
+        minX = std::min(minX, corner.x);
+        maxX = std::max(maxX, corner.x);
+        minY = std::min(minY, corner.y);
+        maxY = std::max(maxY, corner.y);
+    }
+
+    minX -= Grid::TileWidth / 2.0f;
+    maxX += Grid::TileWidth / 2.0f;
+    minY -= Grid::TileHeight / 2.0f;
+    maxY += Grid::TileHeight / 2.0f;
+
+    return Rectangle{ minX, minY, maxX - minX, maxY - minY };
 }
 
 bool World::GetTimeState() const

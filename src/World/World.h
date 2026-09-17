@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "raylib.h"
 #include "GlobalWorldState.h"
 #include "GridPos.h"
 #include "Tile.h"
@@ -38,6 +39,8 @@ public:
     std::optional<GridPos> GetApproachTarget(ZoneType type, GridPos from) const;
 
     ZoneType GetZoneAt(GridPos pos) const;
+    std::optional<Vector2> GetZoneScreenCenter(ZoneType type) const;
+    std::optional<Rectangle> GetZoneScreenFootprint(ZoneType type) const;
     
     void SetZoneEntrance(ZoneType type, GridPos entrance);
     void SetTimeState(bool isDay);

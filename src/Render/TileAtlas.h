@@ -8,5 +8,6 @@ Texture2D GetTileTexture(ZoneType zone);
 Texture2D GetTileOverlayTexture(ZoneType zone);
 Texture2D GetTreeTextureByVariant(int variant);
 Texture2D GetDigHoleTexture();
+Texture2D GetBarnBuildingTexture();
 
 #endif

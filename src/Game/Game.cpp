@@ -120,8 +120,31 @@ void Game::Update()
         return first->GetActualPosition().y < second->GetActualPosition().y;
     });
     
+    const auto barnFrontDepth = renderer->GetBarnBuildingFrontDepth();
+
+    const auto npcDepth = [](const std::shared_ptr<BaseNpc>& npc)
+    {
+        const GridPos grid = Grid::ToGrid(npc->GetActualPosition());
+        return grid.row + grid.col;
+    };
+
     for (const auto& npc : baseNpcs)
-        npc->UpdateDraw();
+        if (!barnFrontDepth.has_value() || npcDepth(npc) <= *barnFrontDepth)
+            npc->UpdateDraw();
+
+    renderer->DrawBarnBuilding();
+
+    const bool anyoneSleeping = std::ranges::any_of(baseNpcs, [](const std::shared_ptr<BaseNpc>& npc)
+    {
+        return npc->GetCurrentActionName() == "Sleep";
+    });
+
+    if (anyoneSleeping)
+        renderer->DrawSleepIndicator();
+
+    for (const auto& npc : baseNpcs)
+        if (barnFrontDepth.has_value() && npcDepth(npc) > *barnFrontDepth)
+            npc->UpdateDraw();
 
     npcStatusIconSystem->Draw(baseNpcs);
 

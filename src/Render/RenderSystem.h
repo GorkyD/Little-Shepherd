@@ -2,6 +2,7 @@
 #define WILDLIFESIM_TILERENDERER_H
 
 #include <memory>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include "raylib.h"
@@ -29,6 +30,10 @@ public:
     RenderSystem(std::shared_ptr<World> world) : world(std::move(world)){};
     void Update();
     void DrawTile(Vector2 position, Tile& tile);
+    void DrawBarnBuilding() const;
+    void DrawSleepIndicator() const;
+    std::optional<float> GetBarnBuildingAnchorY() const;
+    std::optional<float> GetBarnBuildingFrontDepth() const;
     Color GetColorByZoneType(ZoneType type);
 };
 

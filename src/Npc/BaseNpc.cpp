@@ -87,6 +87,9 @@ void BaseNpc::Update(const std::shared_ptr<Astar<GridPos, GridDomain>>& astar, c
 
 void BaseNpc::UpdateDraw() const
 {
+    if (currentActionName == "Sleep")
+        return;
+
     animator.Draw(Vector2Add(actualPosition, workOffset));
 }
 
