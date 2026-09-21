@@ -3,7 +3,7 @@
 
 enum class InputAction : int8_t
 {
-    MoveLeft, MoveRight, MoveForward, MoveBack
+    MoveLeft, MoveRight, MoveForward, MoveBack, FirstStrategySelect, SecondStrategySelect, ThirdStrategySelect, FourthStrategySelect
 };
 
 enum class PointerInputAction : int8_t

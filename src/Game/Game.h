@@ -9,6 +9,8 @@
 #include "Input/InputSystem.h"
 #include "NPC/BaseNpc.h"
 #include "Player/ObjectMoveSystem.h"
+#include "Player/PlayerInteractSystem.h"
+#include "Player/SwitchModeSystem.h"
 #include "Render/RenderSystem.h"
 #include "Render/Background/ProceduralBackground.h"
 #include "Render/Hud/HudSystem.h"
@@ -18,12 +20,14 @@
 class Game
 {
     std::unique_ptr<ProceduralBackground> proceduralBackground;
-    std::unique_ptr<ObjectMoveSystem> objectMoveSystem;
+    std::unique_ptr<SwitchModeSystem> switchModeSystem;
     std::unique_ptr<HudSystem> hudSystem;
     std::unique_ptr<NpcStatusIconSystem> npcStatusIconSystem;
 
     std::vector<std::shared_ptr<BaseNpc>> baseNpcs;
 
+    std::shared_ptr<PlayerInteractSystem> playerInteractSystem;
+    std::shared_ptr<InteractModeState> interactModeState;
     std::shared_ptr<CameraController> cameraController;
     std::shared_ptr<Astar<GridPos,GridDomain>> astar;
     std::shared_ptr<InputSystem> inputSystem;

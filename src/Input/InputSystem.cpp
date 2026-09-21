@@ -25,6 +25,12 @@ bool InputSystem::IsPointerActionDown(PointerInputAction action) const
     return inputStrategy->IsPointerDown(action);
 }
 
+bool InputSystem::IsActionPressed(InputAction action) const
+{
+    return inputStrategy->IsActionPressed(action);
+}
+
+
 bool InputSystem::IsActionDown(InputAction action) const
 {
     return inputStrategy->IsActionDown(action);

@@ -16,6 +16,7 @@ public:
     bool IsPointerActionUnPressed(PointerInputAction action) const;
     bool IsPointerActionPressed(PointerInputAction action) const;
     bool IsPointerActionDown(PointerInputAction action) const;
+    bool IsActionPressed(InputAction action) const;
     bool IsActionDown(InputAction action) const;
 };
 

@@ -2,6 +2,7 @@
 #define WILDLIFESIM_EXTENSION_H
 
 #include "Goap/WorldState.h"
+#include "Player/InteractType.h"
 #include "World/Grid.h"
 #include "World/ZoneType.h"
 
@@ -34,6 +35,23 @@ namespace Extension
     static Vector2 ToWorld(GridPos pos)
     {
         return Grid::ToScreen(pos);
+    }
+
+    static  const char* GetTextForEnum(InteractType currentType)
+    {
+        switch(currentType)
+        {
+            case InteractType::Drag:
+                return "Drag Mode";
+            case InteractType::Fire:
+                return "Fire Mode";
+            case InteractType::Water:
+                return "Water Mode";
+            case InteractType::Spawn:
+                return "Spawn Mode";
+            default:
+                return "*Unknown Interaction Type*";
+        }
     }
 }
 

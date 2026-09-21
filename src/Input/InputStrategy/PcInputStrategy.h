@@ -13,7 +13,11 @@ class PcInputStrategy : public InputStrategy
         {InputAction::MoveBack, KEY_S},
         {InputAction::MoveRight, KEY_D},
         {InputAction::MoveLeft, KEY_A},
-        {InputAction::MoveForward, KEY_W}
+        {InputAction::MoveForward, KEY_W},
+        {InputAction::FirstStrategySelect, KEY_ONE},
+        {InputAction::SecondStrategySelect, KEY_TWO},
+        {InputAction::ThirdStrategySelect, KEY_THREE},
+        {InputAction::FourthStrategySelect, KEY_FOUR}
     };
     
     std::unordered_map<PointerInputAction, int> pointerInputActionMap = 

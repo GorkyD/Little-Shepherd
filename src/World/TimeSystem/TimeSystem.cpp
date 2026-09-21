@@ -9,7 +9,7 @@ void TimeSystem::TimeOfDayChange() const
 void TimeSystem::Start() const
 {
     world->SetTimeState(true);
-    eventBus->Publish(OnDayTimeChange);
+    eventBus->Publish(EventType::OnDayTimeChange);
 }
 
 float TimeSystem::GetCurrentDayTimeProgress() const
@@ -30,6 +30,6 @@ void TimeSystem::Update()
     {
         elapsed -= currentDuration;
         TimeOfDayChange();
-        eventBus->Publish(OnDayTimeChange);
+        eventBus->Publish(EventType::OnDayTimeChange);
     }
 }

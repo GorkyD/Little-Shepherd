@@ -3,11 +3,12 @@
 
 #include <memory>
 #include <utility>
+#include "BaseInteractSystem.h"
 #include "Camera/CameraController.h"
 #include "Input/InputSystem.h"
 #include "NPC/BaseNpc.h"
 
-class ObjectMoveSystem
+class ObjectMoveSystem : public BaseInteractSystem
 {
     const float Radius = 100.0f;
     const std::string SkipState = "Sleep";
@@ -25,8 +26,9 @@ class ObjectMoveSystem
 
 public:
     ObjectMoveSystem(std::shared_ptr<CameraController> cameraController, std::shared_ptr<InputSystem> inputSystem, std::vector<std::shared_ptr<BaseNpc>> allNpcs, std::shared_ptr<Astar<GridPos,GridDomain>> astar) : cameraController(std::move(cameraController)), astar(std::move(astar)), inputSystem(std::move(inputSystem)), allNpcs(std::move((allNpcs))) {}
-    
-    void Update();
+    void Start() override;
+    void Update() override;
+    void Exit() override;
 };
 
 #endif

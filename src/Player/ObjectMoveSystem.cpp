@@ -1,5 +1,10 @@
 ﻿#include "ObjectMoveSystem.h"
 
+void ObjectMoveSystem::Start()
+{
+    
+}
+
 void ObjectMoveSystem::Update()
 {
     const bool rawDown = inputSystem->IsPointerActionDown(PointerInputAction::BasePointerClick);
@@ -44,5 +49,15 @@ void ObjectMoveSystem::Update()
             draggedNpc->Replan(astar);
             draggedNpc = nullptr;
         }
+    }
+}
+
+void ObjectMoveSystem::Exit()
+{
+    if (draggedNpc)
+    {
+        draggedNpc->SetDraggedState(false);
+        draggedNpc->Replan(astar);
+        draggedNpc = nullptr;
     }
 }

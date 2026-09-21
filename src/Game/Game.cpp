@@ -21,6 +21,7 @@
 #include "Npc/Fisherman.h"
 #include "NPC/WoodCutter.h"
 #include "Player/ObjectMoveSystem.h"
+#include "Player/SwitchModeSystem.h"
 #include "Render/RenderSystem.h"
 #include "Render/Background/ProceduralBackground.h"
 #include "Window/Window.h"
@@ -71,7 +72,7 @@ void Game::Start()
     
     for (const auto& npc : baseNpcs)
     {
-        eventBus->Subscribe(OnDayTimeChange, npc,[&](const std::shared_ptr<BaseNpc>& self)
+        eventBus->Subscribe(EventType::OnDayTimeChange, npc,[&](const std::shared_ptr<BaseNpc>& self)
         {
             self->Replan(astar);
         });
@@ -91,19 +92,29 @@ void Game::Start()
     cameraController = std::make_shared<CameraController>(inputSystem);
     cameraController->Start(boundsMin, boundsMax);
     
+    interactModeState = std::make_shared<InteractModeState>();
+    interactModeState->SetCurrentType(InteractType::Drag);
+    
+    switchModeSystem = std::make_unique<SwitchModeSystem>(interactModeState, inputSystem, eventBus);
+    
     proceduralBackground = std::make_unique<ProceduralBackground>(timeSystem, world);
-    hudSystem = std::make_unique<HudSystem>();
+    hudSystem = std::make_unique<HudSystem>(interactModeState);
     npcStatusIconSystem = std::make_unique<NpcStatusIconSystem>();
     
-    objectMoveSystem = std::make_unique<ObjectMoveSystem>(cameraController, inputSystem, GetNpc(), astar);
+    playerInteractSystem = std::make_shared<PlayerInteractSystem>(interactModeState,cameraController, inputSystem, GetNpc(), astar);
+    playerInteractSystem->OnInteractSystemSelect();
+    
+    eventBus->Subscribe(EventType::OnPlayerInteractModeChange, playerInteractSystem,[&](const std::shared_ptr<PlayerInteractSystem>& self){ self->OnInteractSystemSelect(); });
 }
 
 void Game::Update()
 {
     cameraController->Update();
     timeSystem->Update();
-    objectMoveSystem->Update();
+    playerInteractSystem->UpdateCurrentInteractable();
 
+    switchModeSystem->Update();
+    
     proceduralBackground->DrawProceduralBackground();
     hudSystem->Update();
 

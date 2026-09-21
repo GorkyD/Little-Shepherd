@@ -124,6 +124,19 @@ add_executable(
         src/BehaviourTree/Selector.h
         "src/BehaviourTree/CheckForThreatNode .h"
         src/BehaviourTree/EngageThreatSequence.h
+        src/Player/PlayerInteractSystem.cpp
+        src/Player/PlayerInteractSystem.h
+        src/Player/BaseInteractSystem.h
+        src/Player/FireObjectSystem.cpp
+        src/Player/FireObjectSystem.h
+        src/Player/WaterObjectSystem.cpp
+        src/Player/WaterObjectSystem.h
+        src/Player/SpawnMobSystem.cpp
+        src/Player/SpawnMobSystem.h
+        src/Player/InteractType.h
+        src/Player/SwitchModeSystem.cpp
+        src/Player/SwitchModeSystem.h
+        src/Player/InteractModeState.h
 )
 
 target_compile_definitions(WildlifeSim PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/Assets/")
