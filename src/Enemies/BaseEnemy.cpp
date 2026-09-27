@@ -63,6 +63,10 @@ void BaseEnemy::AdvanceMove(const float dt)
         }
 
         const Vector2 graphStart = currentPath.Evaluate(0, 0.0f);
+        newPos = Vector2Lerp(catchUpFrom, graphStart, t);
+    }
+    else
+    {
         if (t >= 1.0f)
         {
             t = 1.0f;
