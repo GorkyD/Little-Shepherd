@@ -47,9 +47,9 @@ void NpcStatusIconSystem::Draw(const std::vector<std::shared_ptr<BaseNpc>>& npcs
     {
         const std::string& action = npc->GetCurrentActionName();
 
-        if (action == "RunAwayFromDanger")
+        if (action == "RunAwayFromDanger" || action == "RunAwayFromFire")
             DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Help.png"), npc->GetActualPosition());
-        else if (action == "SearchDanger")
+        else if (action == "SearchDanger" || action == "GetWater" || action == "ExtinguishFire")
             DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Info.png"), npc->GetActualPosition(), true);
     }
 }

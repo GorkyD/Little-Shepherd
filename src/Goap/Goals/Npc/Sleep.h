@@ -8,7 +8,7 @@ inline Goal SleepGoal()
     return Goal
     {
         .priority = 2,
-        .activationCondition = {{Flag::IsDayTime, false}, {Flag::IsInDanger, false}},
+        .activationCondition = {{Flag::IsDayTime, false}, {Flag::IsInDanger, false}, {Flag::FireNearby, false}},
         .targetConditions = {{Flag::HasSlept, true}}
     };
 }

@@ -6,7 +6,7 @@
 class Farmer : public BaseNpc, public std::enable_shared_from_this<Farmer>
 {
 public:
-    Farmer(GridPos startPosition, std::string name) : BaseNpc(startPosition, name){}
+    Farmer(GridPos startPosition, std::string name, std::string archetype = "Farmer") : BaseNpc(startPosition, name) { ApplyBehaviourProfile(archetype); }
     
     std::string GetWorkClipFor(const Action* action) override;
     float CalculateTileOffsetByName(std::string name) override;

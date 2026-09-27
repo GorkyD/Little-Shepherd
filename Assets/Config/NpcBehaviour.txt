@@ -1,0 +1,5 @@
+Farmer CourageMin=0 CourageMax=0 HasWeapon=false
+WoodCutter CourageMin=0 CourageMax=3 HasWeapon=true
+Fisherman CourageMin=0 CourageMax=0 HasWeapon=false
+Coward CourageMin=0 CourageMax=0 HasWeapon=false
+Brave CourageMin=3 CourageMax=3 HasWeapon=true

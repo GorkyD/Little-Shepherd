@@ -21,7 +21,7 @@ void ObjectMoveSystem::Update()
     {
         bool collision = false;
         auto pointerWorldPos = GetScreenToWorld2D(inputSystem->GetPointerScreenPosition(), cameraController->Get());
-        for (auto& npc : allNpcs)
+        for (const auto& npc : allNpcs)
         {
             if (npc->GetCurrentActionName() == SkipState)
                 continue;

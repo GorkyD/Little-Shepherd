@@ -1,4 +1,5 @@
 #include "TileAtlas.h"
+#include <algorithm>
 #include <iterator>
 #include <string>
 #include <unordered_map>
@@ -75,6 +76,24 @@ Texture2D GetTreeTextureByVariant(const int variant)
     const Texture2D texture = LoadTexture(path.c_str());
 
     cache[variant] = texture;
+    return texture;
+}
+
+Texture2D GetFireTexture(const int frame)
+{
+    static const char* frameNames[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
+    static std::unordered_map<int, Texture2D> cache;
+
+    const int clamped = std::clamp(frame, 0, static_cast<int>(std::size(frameNames)) - 1);
+
+    const auto it = cache.find(clamped);
+    if (it != cache.end())
+        return it->second;
+
+    const std::string path = std::string(ASSETS_DIR) + "Fire/Group 6 - 5/Group 6 - 5_" + frameNames[clamped] + ".png";
+    const Texture2D texture = LoadTexture(path.c_str());
+
+    cache[clamped] = texture;
     return texture;
 }
 

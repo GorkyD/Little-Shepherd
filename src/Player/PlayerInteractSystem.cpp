@@ -11,9 +11,9 @@ std::shared_ptr<BaseInteractSystem> PlayerInteractSystem::StrategyFactory(Intera
         case InteractType::Drag:
             return std::make_shared<ObjectMoveSystem>(cameraController, inputSystem, allNpcs, astar);
         case InteractType::Fire:
-            return std::make_shared<FireObjectSystem>();
+            return std::make_shared<FireObjectSystem>(cameraController, inputSystem, world);
         case InteractType::Water:
-            return std::make_shared<WaterObjectSystem>();
+            return std::make_shared<WaterObjectSystem>(cameraController, inputSystem, world);
         case InteractType::Spawn:
             return std::make_shared<SpawnMobSystem>();
         default: return nullptr;

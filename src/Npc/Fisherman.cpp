@@ -8,6 +8,9 @@ std::string Fisherman::GetWorkClipFor(const Action* action)
     if (action->name == "Fish")                 return "Fish_Fishingpole";
     if (action->name == "Sleep")                return "Sit";
     if (action->name == "RunAwayFromDanger")    return "Run";
+    if (action->name == "RunAwayFromFire")      return "Run";
+    if (action->name == "GetWater")             return "Walk";
+    if (action->name == "ExtinguishFire")       return "WalkHoldingTool_WaterCan";
     return "Idle";
 }
 

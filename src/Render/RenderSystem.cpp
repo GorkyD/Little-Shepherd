@@ -143,7 +143,7 @@ void RenderSystem::DrawTile(Vector2 center, Tile& tile)
             if (tile.digHoleTimer < 0.0f)
                 tile.digHoleTimer = 0.0f;
         }
-
+        
         if (type == ZoneType::Forest && tile.treeVariant >= 0)
         {
             const Texture2D tree = GetTreeTextureByVariant(tile.treeVariant);
@@ -169,6 +169,24 @@ void RenderSystem::DrawTile(Vector2 center, Tile& tile)
                     if (tile.chopFlash < 0.0f)
                         tile.chopFlash = 0.0f;
                 }
+            }
+        }
+        
+        if (tile.onFire)
+        {
+            constexpr float frameDuration = 0.09f;
+            constexpr int frameCount = 8;
+            const int frame = static_cast<int>(GetTime() / frameDuration) % frameCount;
+
+            const Texture2D fire = GetFireTexture(frame);
+            if (fire.id != 0)
+            {
+                constexpr float fireWidth = 48.0f;
+                const float fireHeight = fireWidth * (static_cast<float>(fire.height) / static_cast<float>(fire.width));
+                const Rectangle fireSource = { 0, 0, static_cast<float>(fire.width), static_cast<float>(fire.height) };
+                const Rectangle fireDest = { center.x, center.y, fireWidth, fireHeight };
+                const Vector2 fireOrigin = { fireWidth / 2.0f, fireHeight * 0.75f };
+                DrawTexturePro(fire, fireSource, fireDest, fireOrigin, 0.0f, WHITE);
             }
         }
 

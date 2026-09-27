@@ -16,6 +16,7 @@ class BehaviourTreeFactory
     std::unique_ptr<Sequence> BuildRunAwaySequence(BaseNpc* npc, const Action* action) const;
     std::unique_ptr<Selector> BuildSearchDangerSequence(BaseNpc* npc, const Action* action) const;
     std::unique_ptr<Sequence> BuildWaitUntilPlacedSequence(BaseNpc* npc, const Action* action) const;
+    std::unique_ptr<Sequence> BuildGetWaterSequence(BaseNpc* npc, const Action* action) const;
 
 public:
     BehaviourTreeFactory(std::shared_ptr<World> world) : world(std::move(world)){}

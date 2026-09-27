@@ -8,7 +8,7 @@ inline Goal WorkGoal()
     return Goal
     {
         .priority = 1,
-        .activationCondition = {{Flag::IsDayTime, true}, {Flag::IsInDanger, false}},
+        .activationCondition = {{Flag::IsDayTime, true}, {Flag::IsInDanger, false}, {Flag::FireNearby, false}},
         .targetConditions = {{Flag::HasWorked, true}}
     };
 }

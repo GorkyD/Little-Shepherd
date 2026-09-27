@@ -103,6 +103,8 @@ add_executable(
         src/Render/Background/ProceduralBackground.h
         src/Npc/Fisherman.cpp
         src/Npc/Fisherman.h
+        src/Npc/NpcBehaviourConfig.h
+        src/Npc/NpcBehaviourConfig.cpp
         src/BehaviourTree/BehaviourTreeFactory.cpp
         src/BehaviourTree/BehaviourTreeFactory.h
         src/Extension/Extension.h
@@ -118,6 +120,7 @@ add_executable(
         src/Goap/Goals/Npc/SafeGoal.h
         src/Goap/Actions/General/WaitUntilPlaced.h
         src/Goap/Actions/General/RunAwayFromDanger.h
+        src/Goap/Actions/General/RunAwayFromFire.h
         src/Goap/Actions/General/SearchDanger.h
         src/BehaviourTree/TimedWaitNode.h
         src/BehaviourTree/MoveToRandomNode.h
@@ -137,6 +140,13 @@ add_executable(
         src/Player/SwitchModeSystem.cpp
         src/Player/SwitchModeSystem.h
         src/Player/InteractModeState.h
+        src/Goap/Goals/Npc/Extinguish.h
+        src/Goap/Actions/General/GetWater.h
+        src/Goap/Actions/General/ExtinguishFire.h
+        src/BehaviourTree/ExtinguishFireNode.h
+        src/Npc/Sensors/Sensor.h
+        src/Npc/Sensors/VisualSensor.h
+        src/Npc/Sensors/VisualSensor.cpp
 )
 
 target_compile_definitions(WildlifeSim PRIVATE ASSETS_DIR="${CMAKE_SOURCE_DIR}/Assets/")

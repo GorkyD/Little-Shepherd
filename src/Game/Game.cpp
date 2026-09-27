@@ -10,7 +10,10 @@
 #include "Goap/Actions/General/Sleep.h"
 #include "Goap/Actions/FieldWorker/MoveToField.h"
 #include "Goap/Actions/FieldWorker/WorkOnField.h"
+#include "Goap/Actions/General/ExtinguishFire.h"
+#include "Goap/Actions/General/GetWater.h"
 #include "Goap/Actions/General/RunAwayFromDanger.h"
+#include "Goap/Actions/General/RunAwayFromFire.h"
 #include "Goap/Actions/General/SearchDanger.h"
 #include "Goap/Actions/General/WaitUntilPlaced.h"
 #include "Goap/Actions/WoodCutter/ChopWood.h"
@@ -39,6 +42,9 @@ void Game::Start()
     world->SetMap(ASSETS_DIR "Maps/Map.txt");
     world->SetZoneEntrance(ZoneType::Barn, GridPos{12, 5});
 
+    for (const auto& tile : world->GetZoneAdjacentWalkableTiles(ZoneType::Water))
+        world->SetZoneEntrance(ZoneType::Water, tile);
+
     renderer = std::make_shared<RenderSystem>(world);
     
     eventBus = std::make_shared<EventBus>();
@@ -48,8 +54,8 @@ void Game::Start()
     
     auto startPoint = world->GetApproachTarget(ZoneType::Barn,GridPos(0,0));
     
-    baseNpcs.push_back(std::make_shared<Farmer>(startPoint.value(), "Farmer1"));
-    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter1"));
+    baseNpcs.push_back(std::make_shared<Farmer>(startPoint.value(), "Farmer1", "Brave"));
+    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter1", "Coward"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter2"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter3"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter4"));
@@ -57,9 +63,9 @@ void Game::Start()
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter6"));
     baseNpcs.push_back(std::make_shared<Fisherman>(startPoint.value(), "Fisherman1"));
 
-    std::vector<Action> fieldWorkerActions = std::vector{MoveToBarn(), MoveToField(), Sleep(), WorkOnField(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger()};
-    std::vector<Action> forestWorkerActions = std::vector{MoveToBarn(), MoveToForest(), Sleep(), ChopWood(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger()};
-    std::vector<Action> fishermanActions = std::vector{MoveToBarn(), MoveToWater(), Sleep(), Fish(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger()};
+    std::vector<Action> fieldWorkerActions = std::vector{MoveToBarn(), MoveToField(), Sleep(), WorkOnField(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger(), GetWater(), ExtinguishFire(), RunAwayFromFire()};
+    std::vector<Action> forestWorkerActions = std::vector{MoveToBarn(), MoveToForest(), Sleep(), ChopWood(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger(), GetWater(), ExtinguishFire(), RunAwayFromFire()};
+    std::vector<Action> fishermanActions = std::vector{MoveToBarn(), MoveToWater(), Sleep(), Fish(), WaitUntilPlaced(), RunAwayFromDanger(), SearchDanger(), GetWater(), ExtinguishFire(), RunAwayFromFire()};
 
     baseNpcs[0]->Start(world, fieldWorkerActions);
     baseNpcs[1]->Start(world, forestWorkerActions);
@@ -72,9 +78,12 @@ void Game::Start()
     
     for (const auto& npc : baseNpcs)
     {
+        world->RegisterAgent(npc);
+
         eventBus->Subscribe(EventType::OnDayTimeChange, npc,[&](const std::shared_ptr<BaseNpc>& self)
         {
-            self->Replan(astar);
+            if (!self->IsHandlingEmergency())
+                self->Replan(astar);
         });
     }
     
@@ -101,7 +110,7 @@ void Game::Start()
     hudSystem = std::make_unique<HudSystem>(interactModeState);
     npcStatusIconSystem = std::make_unique<NpcStatusIconSystem>();
     
-    playerInteractSystem = std::make_shared<PlayerInteractSystem>(interactModeState,cameraController, inputSystem, GetNpc(), astar);
+    playerInteractSystem = std::make_shared<PlayerInteractSystem>(interactModeState,cameraController, inputSystem, GetNpc(), astar, world);
     playerInteractSystem->OnInteractSystemSelect();
     
     eventBus->Subscribe(EventType::OnPlayerInteractModeChange, playerInteractSystem,[&](const std::shared_ptr<PlayerInteractSystem>& self){ self->OnInteractSystemSelect(); });
@@ -111,7 +120,6 @@ void Game::Update()
 {
     cameraController->Update();
     timeSystem->Update();
-    playerInteractSystem->UpdateCurrentInteractable();
 
     switchModeSystem->Update();
     
@@ -159,5 +167,7 @@ void Game::Update()
 
     npcStatusIconSystem->Draw(baseNpcs);
 
+    playerInteractSystem->UpdateCurrentInteractable();
+    
     EndMode2D();
 }

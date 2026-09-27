@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <random>
 #include "BaseNpc.h"
 #include "raymath.h"
 #include "Astar/Domains/GoapDomain.h"
@@ -7,9 +8,12 @@
 #include "BehaviourTree/Sequence.h"
 #include "BehaviourTree/WaitNode.h"
 #include "Extension/Extension.h"
+#include "Goap/Goals/Npc/Extinguish.h"
 #include "Goap/Goals/Npc/SafeGoal.h"
 #include "Goap/Goals/Npc/Sleep.h"
 #include "Goap/Goals/Npc/Work.h"
+#include "NpcBehaviourConfig.h"
+#include "Sensors/VisualSensor.h"
 #include "World/Grid.h"
 
 #define DEBUG 1
@@ -63,6 +67,9 @@ void BaseNpc::WorldStep(const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
 
 void BaseNpc::Update(const std::shared_ptr<Astar<GridPos, GridDomain>>& astar, const std::shared_ptr<RenderSystem>& renderer)
 {
+    if (visionSensor)
+        visionSensor->Scan(this, world, astar);
+
     if (currentBehavior)
     {
         BTContext ctx{ this, astar, renderer, GetFrameTime() };
@@ -93,16 +100,31 @@ void BaseNpc::UpdateDraw() const
     animator.Draw(Vector2Add(actualPosition, workOffset));
 }
 
+void BaseNpc::ApplyBehaviourProfile(const std::string& archetype)
+{
+    const NpcBehaviourProfile& profile = GetNpcBehaviourProfile(archetype);
+
+    std::mt19937 rng(std::random_device{}());
+    npcBehaviour.courage = std::uniform_int_distribution(profile.courageMin, profile.courageMax)(rng);
+    currentState.hasWeapon = profile.hasWeapon;
+}
+
 void BaseNpc::Start(const std::shared_ptr<World>& world, std::vector<Action> actions)
 {
+    constexpr int MaxCourage = 3;
+
     for (auto& action : actions)
-        if (action.name == "SearchDanger") action.cost = Clamp(action.cost - npcBehaviour.courage,0 , 100);
+    {
+        if (action.name == "SearchDanger") action.cost = Clamp(action.cost - npcBehaviour.courage, 0, 100);
+        if (action.name == "ExtinguishFire") action.cost = Clamp(action.cost + (MaxCourage - npcBehaviour.courage), 0, 100);
+    }
 
     this->world = world;
     behaviourTreeFactory = std::make_unique<BehaviourTreeFactory>(world);
-    goalPlanner = std::make_unique<GoalPlanner>(std::vector{ SleepGoal(), WorkGoal(), SafeGoal() });
+    goalPlanner = std::make_unique<GoalPlanner>(std::vector{ SleepGoal(), WorkGoal(), SafeGoal(), ExtinguishGoal() });
     goapDomain = std::make_unique<GoapDomain>(actions);
     goapAstar = std::make_unique<Astar<WorldState, GoapDomain, Goal>>(*goapDomain);
+    visionSensor = std::make_unique<VisualSensor>();
 }
 
 void BaseNpc::Replan(const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
@@ -263,4 +285,43 @@ void BaseNpc::SetDangerState(bool state)
 Tile& BaseNpc::GetCurrentTile() const
 {
     return world->GetTile(position.row, position.col);
+}
+
+void BaseNpc::ReportFireSighting(bool sawFire, std::optional<GridPos> tile, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
+{
+    if (sawFire)
+        knownFireTile = tile;
+    else
+        knownFireTile.reset();
+
+    const bool wasFireNearby = currentState.fireNearby;
+    currentState.fireNearby = sawFire;
+
+    if (currentState.fireNearby != wasFireNearby)
+        Replan(astar);
+}
+
+void BaseNpc::ReportThreatNearby(bool detected)
+{
+    nearbyThreatDetected = detected;
+}
+
+void BaseNpc::ReportNearbyAlarm(bool sawAlarmedNpc, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
+{
+    if (!sawAlarmedNpc || currentState.isInDanger)
+        return;
+
+    currentState.isInDanger = true;
+    Replan(astar);
+}
+
+bool BaseNpc::IsKnownFireStillBurning() const
+{
+    return knownFireTile.has_value() && world->GetTile(knownFireTile->row, knownFireTile->col).onFire;
+}
+
+void BaseNpc::ExtinguishKnownFire()
+{
+    if (knownFireTile.has_value())
+        world->GetTile(knownFireTile->row, knownFireTile->col).onFire = false;
 }

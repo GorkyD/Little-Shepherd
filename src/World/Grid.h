@@ -2,6 +2,8 @@
 #define WILDLIFESIM_GRID_H
 
 #include <cmath>
+#include <functional>
+
 #include "raylib.h"
 #include "GridPos.h"
 
@@ -17,7 +19,7 @@ namespace Grid
             (col + row) * (TileHeight / 2.0f)
         };
     }
-    
+
     inline BoundingBox GetBoundingBox2D(Vector2 position)
     {
         return BoundingBox(Vector3(position.x - TileWidth / 2.0f, position.y - TileWidth / 2.0f),Vector3(position.x + TileWidth / 2.0f, position.y + TileWidth / 2.0f));

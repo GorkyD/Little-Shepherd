@@ -9,5 +9,6 @@ Texture2D GetTileOverlayTexture(ZoneType zone);
 Texture2D GetTreeTextureByVariant(int variant);
 Texture2D GetDigHoleTexture();
 Texture2D GetBarnBuildingTexture();
+Texture2D GetFireTexture(int frame);
 
 #endif

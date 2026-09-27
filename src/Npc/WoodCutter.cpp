@@ -8,7 +8,10 @@ std::string WoodCutter::GetWorkClipFor(const Action* action)
     if (action->name == "ChopWood")             return "Swing_Axe";
     if (action->name == "Sleep")                return "Sit";
     if (action->name == "RunAwayFromDanger")    return "Run";
+    if (action->name == "RunAwayFromFire")      return "Run";
     if (action->name == "SearchDanger")         return "WalkHoldingTool_Sword";
+    if (action->name == "GetWater")             return "Walk";
+    if (action->name == "ExtinguishFire")       return "WalkHoldingTool_WaterCan";
     return "Idle";
 }
 

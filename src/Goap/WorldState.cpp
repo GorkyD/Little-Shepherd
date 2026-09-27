@@ -10,6 +10,8 @@ bool WorldState::GetFlag(Flag flag) const
         case Flag::IsInDanger: return isInDanger;
         case Flag::IsDragged: return isDragged;
         case Flag::HasWeapon: return hasWeapon;
+        case Flag::FireNearby: return fireNearby;
+        case Flag::HasWater: return hasWater;
     }
     return false;
 }
@@ -24,5 +26,7 @@ void WorldState::SetFlag(Flag flag, bool value)
         case Flag::IsInDanger: isInDanger = value; break;
         case Flag::IsDragged: isDragged = value; break;
         case Flag::HasWeapon: hasWeapon = value; break;
+        case Flag::FireNearby: fireNearby = value; break;
+        case Flag::HasWater: hasWater = value; break;
     }
 }

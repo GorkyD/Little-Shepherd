@@ -1,14 +1,12 @@
 ﻿#ifndef WILDLIFESIM_WOODCUTTER_H
 #define WILDLIFESIM_WOODCUTTER_H
 
-#include <random>
-
 #include "BaseNpc.h"
 
 class WoodCutter : public BaseNpc, public std::enable_shared_from_this<WoodCutter>
 {
 public:
-    WoodCutter(GridPos startPosition, std::string name) : BaseNpc(startPosition, name) {currentState.hasWeapon = true; std::mt19937 rng(std::random_device{}()); npcBehaviour.courage = std::uniform_int_distribution(0, 3)(rng);}
+    WoodCutter(GridPos startPosition, std::string name, std::string archetype = "WoodCutter") : BaseNpc(startPosition, name) { ApplyBehaviourProfile(archetype); }
 
     std::string GetWorkClipFor(const Action* action) override;
     float CalculateTileOffsetByName(std::string name) override;

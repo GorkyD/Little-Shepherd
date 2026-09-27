@@ -5,6 +5,7 @@
 #include <iostream>
 #include <random>
 #include "Grid.h"
+#include "Npc/BaseNpc.h"
 
 World::World() = default;
 
@@ -169,7 +170,7 @@ std::optional<GridPos> World::GetWalkableNeighbor(const GridPos target, const Gr
         if (row < 0 || row >= width || col < 0 || col >= height)
             continue;
 
-        if (!map[row][col].walkable)
+        if (!map[row][col].walkable || map[row][col].isBusy)
             continue;
 
         const int distance = std::abs(row - from.row) + std::abs(col - from.col);
@@ -188,8 +189,28 @@ std::optional<GridPos> World::GetApproachTarget(const ZoneType type, const GridP
 {
     const auto entranceIt = zoneEntrances.find(type);
 
-    if (entranceIt != zoneEntrances.end())
-        return entranceIt->second;
+    if (entranceIt != zoneEntrances.end() && !entranceIt->second.empty())
+    {
+        std::optional<GridPos> nearestEntrance;
+        int bestEntranceDistance = 0;
+
+        for (const GridPos& entrance : entranceIt->second)
+        {
+            if (map[entrance.row][entrance.col].isBusy)
+                continue;
+
+            const int distance = std::abs(entrance.row - from.row) + std::abs(entrance.col - from.col);
+
+            if (!nearestEntrance.has_value() || distance < bestEntranceDistance)
+            {
+                nearestEntrance = entrance;
+                bestEntranceDistance = distance;
+            }
+        }
+
+        if (nearestEntrance.has_value())
+            return nearestEntrance;
+    }
 
     const auto nearest = GetNearestTileOfType(type, from);
 
@@ -204,16 +225,52 @@ std::optional<GridPos> World::GetApproachTarget(const ZoneType type, const GridP
 
 void World::SetZoneEntrance(const ZoneType type, const GridPos entrance)
 {
-    zoneEntrances[type] = entrance;
+    zoneEntrances[type].push_back(entrance);
+}
+
+std::vector<GridPos> World::GetZoneAdjacentWalkableTiles(const ZoneType type) const
+{
+    static constexpr int offsets[8][2] =
+    {
+        {1,0}, {-1,0}, {0,1}, {0,-1},
+        {1,1}, {1,-1}, {-1,1}, {-1,-1}
+    };
+
+    std::vector<GridPos> result;
+    const auto it = zoneTiles.find(type);
+
+    if (it == zoneTiles.end())
+        return result;
+
+    for (const GridPos& tile : it->second)
+    {
+        for (const auto& offset : offsets)
+        {
+            const int row = tile.row + offset[0];
+            const int col = tile.col + offset[1];
+
+            if (row < 0 || row >= width || col < 0 || col >= height)
+                continue;
+
+            if (!map[row][col].walkable)
+                continue;
+
+            const GridPos candidate{ row, col };
+
+            if (std::ranges::find(result, candidate) == result.end())
+                result.push_back(candidate);
+        }
+    }
+
+    return result;
 }
 
 ZoneType World::GetZoneAt(const GridPos pos) const
 {
-    for (const auto& [zone, entrance] : zoneEntrances)
-    {
-        if (entrance == pos)
-            return zone;
-    }
+    for (const auto& [zone, entrances] : zoneEntrances)
+        for (const GridPos& entrance : entrances)
+            if (entrance == pos)
+                return zone;
 
     static constexpr int offsets[8][2] =
     {
@@ -309,6 +366,33 @@ bool World::GetTimeState() const
 
 void World::SetTimeState(bool isDay)
 {
-    worldState.IsDayNow = isDay;   
+    worldState.IsDayNow = isDay;
     std::cout << worldState.IsDayNow << std::endl;
+}
+
+void World::RegisterAgent(const std::shared_ptr<BaseNpc>& npc)
+{
+    agents.push_back(npc);
+}
+
+std::vector<std::shared_ptr<BaseNpc>> World::GetAgents() const
+{
+    std::vector<std::shared_ptr<BaseNpc>> result;
+    result.reserve(agents.size());
+
+    for (const auto& agent : agents)
+        if (auto locked = agent.lock())
+            result.push_back(std::move(locked));
+
+    return result;
+}
+
+bool World::IsAnyAgentSearchingDanger() const
+{
+    for (const auto& agent : agents)
+        if (auto locked = agent.lock())
+            if (locked->GetCurrentActionName() == "SearchDanger")
+                return true;
+
+    return false;
 }

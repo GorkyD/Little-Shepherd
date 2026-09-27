@@ -10,7 +10,9 @@ enum class Flag
     HasSlept,
     IsInDanger,
     IsDragged,
-    HasWeapon
+    HasWeapon,
+    FireNearby,
+    HasWater
 };
 
 enum class Location
@@ -35,7 +37,9 @@ struct WorldState
     bool isInDanger = false;
     bool isDragged = false;
     bool hasWeapon = false;
-    
+    bool fireNearby = false;
+    bool hasWater = false;
+
     Location location = Location::None;
 
     bool operator==(const WorldState&) const = default;
@@ -56,6 +60,8 @@ struct std::hash<WorldState>
         h = h * 31 + std::hash<bool>()(state.isInDanger);
         h = h * 31 + std::hash<bool>()(state.isDragged);
         h = h * 31 + std::hash<bool>()(state.hasWeapon);
+        h = h * 31 + std::hash<bool>()(state.fireNearby);
+        h = h * 31 + std::hash<bool>()(state.hasWater);
         return h;
     }
 };

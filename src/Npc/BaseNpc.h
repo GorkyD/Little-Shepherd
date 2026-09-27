@@ -12,6 +12,7 @@
 #include "Goap/Goals/GoalPlanner.h"
 #include "Render/CharacterAnimator.h"
 #include "Render/RenderSystem.h"
+#include "Sensors/Sensor.h"
 #include "World/GridPos.h"
 #include "World/ZoneType.h"
 
@@ -27,6 +28,10 @@ class BaseNpc : public std::enable_shared_from_this<BaseNpc>
     std::string currentActionName;
 
     std::optional<GridPos> reservedTile;
+    std::optional<GridPos> knownFireTile;
+    bool nearbyThreatDetected = false;
+    std::unique_ptr<Sensor> visionSensor;
+
     SplinePath currentPath;
     size_t segmentIndex = 0;
 
@@ -48,7 +53,9 @@ protected:
     
     Vector2 lastMoveDirection{ 0.0f, 1.0f };
     Vector2 targetWorkOffset{};
-    
+
+    void ApplyBehaviourProfile(const std::string& archetype);
+
 public:
     GridPos position;
     std::string name;
@@ -73,16 +80,27 @@ public:
     void SetDraggedState(bool state);
     void SetDangerState(bool state);
 
+    void ReportFireSighting(bool sawFire, std::optional<GridPos> tile, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
+    void ReportThreatNearby(bool detected);
+    void ReportNearbyAlarm(bool sawAlarmedNpc, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
+
     Tile& GetCurrentTile() const;
     Vector2 GetActualPosition() const {return actualPosition;}
+    Vector2 GetLastMoveDirection() const {return lastMoveDirection;}
     const std::string& GetCurrentActionName() const {return currentActionName;}
-    
+
     int GetNpcCourage() const { return npcBehaviour.courage; }
-    
+
+    std::optional<GridPos> GetKnownFireTile() const { return knownFireTile; }
+    void ClearKnownFireTile() { knownFireTile.reset(); }
+    bool IsKnownFireStillBurning() const;
+    void ExtinguishKnownFire();
+
     bool BeginMove(GridPos targetPosition, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
     bool BeginMove(ZoneType targetZone, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
     bool IsMoving() const;
-    bool HasNearbyThreat() { return false; };
+    bool HasNearbyThreat() const { return nearbyThreatDetected; };
+    bool IsHandlingEmergency() const { return currentState.isInDanger || currentState.fireNearby; }
 };
 
 #endif

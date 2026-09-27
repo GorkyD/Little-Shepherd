@@ -8,6 +8,9 @@ std::string Farmer::GetWorkClipFor(const Action* action)
     if (action->name == "WorkOnField")       return "Dig_Showel";
     if (action->name == "Sleep")             return "Sit";
     if (action->name == "RunAwayFromDanger") return "Run";
+    if (action->name == "RunAwayFromFire")   return "Run";
+    if (action->name == "GetWater")          return "Walk";
+    if (action->name == "ExtinguishFire")    return "WalkHoldingTool_WaterCan";
     return "Idle";
 }
 
