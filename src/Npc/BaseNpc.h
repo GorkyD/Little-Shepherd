@@ -29,6 +29,7 @@ class BaseNpc : public std::enable_shared_from_this<BaseNpc>
 
     std::optional<GridPos> reservedTile;
     std::optional<GridPos> knownFireTile;
+    std::weak_ptr<Wolf> knownThreat;
     bool nearbyThreatDetected = false;
     std::unique_ptr<Sensor> visionSensor;
 
@@ -81,7 +82,7 @@ public:
     void SetDangerState(bool state);
 
     void ReportFireSighting(bool sawFire, std::optional<GridPos> tile, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
-    void ReportThreatNearby(bool detected);
+    void ReportThreatNearby(std::optional<std::weak_ptr<Wolf>> threat, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
     void ReportNearbyAlarm(bool sawAlarmedNpc, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
 
     Tile& GetCurrentTile() const;
@@ -95,6 +96,15 @@ public:
     void ClearKnownFireTile() { knownFireTile.reset(); }
     bool IsKnownFireStillBurning() const;
     void ExtinguishKnownFire();
+
+    std::shared_ptr<Wolf> GetKnownThreat() const { return knownThreat.lock(); }
+    void ClearKnownThreat() { knownThreat.reset(); }
+    bool IsKnownThreatAlive() const;
+    bool BeginApproachMove(GridPos target, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
+    void ClaimCombatTile();
+    void ReleaseReservedTile();
+    void FacePosition(GridPos target);
+    bool ConsumeAttackTick();
 
     bool BeginMove(GridPos targetPosition, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
     bool BeginMove(ZoneType targetZone, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);

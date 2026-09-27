@@ -30,10 +30,10 @@ public:
     RenderSystem(std::shared_ptr<World> world) : world(std::move(world)){};
     void Update();
     void DrawTile(Vector2 position, Tile& tile);
+    void DrawTree(Vector2 position, Tile& tile) const;
     void DrawBarnBuilding() const;
     void DrawSleepIndicator() const;
     std::optional<float> GetBarnBuildingAnchorY() const;
-    std::optional<float> GetBarnBuildingFrontDepth() const;
     Color GetColorByZoneType(ZoneType type);
 };
 

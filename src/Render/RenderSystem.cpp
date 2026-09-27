@@ -38,16 +38,6 @@ std::optional<float> RenderSystem::GetBarnBuildingAnchorY() const
     return footprint->y + footprint->height + BarnDoorAlignOffsetY;
 }
 
-std::optional<float> RenderSystem::GetBarnBuildingFrontDepth() const
-{
-    const auto anchorY = GetBarnBuildingAnchorY();
-
-    if (!anchorY.has_value())
-        return std::nullopt;
-
-    return *anchorY / (Grid::TileHeight / 2.0f);
-}
-
 void RenderSystem::DrawBarnBuilding() const
 {
     const auto footprint = world->GetZoneScreenFootprint(ZoneType::Barn);
@@ -144,34 +134,6 @@ void RenderSystem::DrawTile(Vector2 center, Tile& tile)
                 tile.digHoleTimer = 0.0f;
         }
         
-        if (type == ZoneType::Forest && tile.treeVariant >= 0)
-        {
-            const Texture2D tree = GetTreeTextureByVariant(tile.treeVariant);
-
-            if (tree.id != 0)
-            {
-                constexpr float treeWidth = 126.0f;
-                const float treeHeight = treeWidth * (static_cast<float>(tree.height) / static_cast<float>(tree.width));
-                const Rectangle treeSource = { 0, 0, static_cast<float>(tree.width), static_cast<float>(tree.height) };
-                const Rectangle treeDest = { center.x, center.y, treeWidth, treeHeight };
-                const Vector2 treeOrigin = { treeWidth / 2.0f, treeHeight * 0.62f };
-
-                DrawTexturePro(tree, treeSource, treeDest, treeOrigin, 0.0f, WHITE);
-
-                if (tile.chopFlash > 0.0f)
-                {
-                    BeginBlendMode(BLEND_ADDITIVE);
-                    const Color flashTint = { 255, 255, 255, static_cast<unsigned char>(255.0f * tile.chopFlash) };
-                    DrawTexturePro(tree, treeSource, treeDest, treeOrigin, 0.0f, flashTint);
-                    EndBlendMode();
-
-                    tile.chopFlash -= GetFrameTime() * 4.0f;
-                    if (tile.chopFlash < 0.0f)
-                        tile.chopFlash = 0.0f;
-                }
-            }
-        }
-        
         if (tile.onFire)
         {
             constexpr float frameDuration = 0.09f;
@@ -207,6 +169,37 @@ void RenderSystem::DrawTile(Vector2 center, Tile& tile)
     DrawLineV(right, bottom, GRID_COLOR);
     DrawLineV(bottom, left, GRID_COLOR);
     DrawLineV(left, top, GRID_COLOR);
+}
+
+void RenderSystem::DrawTree(const Vector2 center, Tile& tile) const
+{
+    if (tile.zone != ZoneType::Forest || tile.treeVariant < 0)
+        return;
+
+    const Texture2D tree = GetTreeTextureByVariant(tile.treeVariant);
+
+    if (tree.id == 0)
+        return;
+
+    constexpr float treeWidth = 126.0f;
+    const float treeHeight = treeWidth * (static_cast<float>(tree.height) / static_cast<float>(tree.width));
+    const Rectangle treeSource = { 0, 0, static_cast<float>(tree.width), static_cast<float>(tree.height) };
+    const Rectangle treeDest = { center.x, center.y, treeWidth, treeHeight };
+    const Vector2 treeOrigin = { treeWidth / 2.0f, treeHeight * 0.62f };
+
+    DrawTexturePro(tree, treeSource, treeDest, treeOrigin, 0.0f, WHITE);
+
+    if (tile.chopFlash > 0.0f)
+    {
+        BeginBlendMode(BLEND_ADDITIVE);
+        const Color flashTint = { 255, 255, 255, static_cast<unsigned char>(255.0f * tile.chopFlash) };
+        DrawTexturePro(tree, treeSource, treeDest, treeOrigin, 0.0f, flashTint);
+        EndBlendMode();
+
+        tile.chopFlash -= GetFrameTime() * 4.0f;
+        if (tile.chopFlash < 0.0f)
+            tile.chopFlash = 0.0f;
+    }
 }
 
 Color RenderSystem::GetColorByZoneType(const ZoneType type)

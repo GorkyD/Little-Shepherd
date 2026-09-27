@@ -32,6 +32,8 @@ void ObjectMoveSystem::Update()
                 draggedNpc = npc;
                 draggedNpc->SetDraggedState(true);
                 draggedNpc->SetDangerState(true);
+                draggedNpc->ClearKnownThreat();
+                draggedNpc->ClearKnownFireTile();
                 draggedNpc->Replan(astar);
                 break;
             }

@@ -15,7 +15,7 @@ std::shared_ptr<BaseInteractSystem> PlayerInteractSystem::StrategyFactory(Intera
         case InteractType::Water:
             return std::make_shared<WaterObjectSystem>(cameraController, inputSystem, world);
         case InteractType::Spawn:
-            return std::make_shared<SpawnMobSystem>();
+            return std::make_shared<SpawnMobSystem>(cameraController, inputSystem, world, wolves);
         default: return nullptr;
     }
 }

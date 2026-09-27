@@ -1,15 +1,16 @@
-﻿#ifndef EXAMPLES_IDLESTATE_H
+#ifndef EXAMPLES_IDLESTATE_H
 #define EXAMPLES_IDLESTATE_H
 
 #include "WolfState.h"
-#include "../State.h"
+#include "Enemies/Wolf.h"
 
 class IdleState : public WolfState
 {
-    void Enter() override;
-    void Exit() override;
+    Wolf* wolf;
+public:
+    explicit IdleState(Wolf* wolf) : wolf(wolf) {}
     void Update() override;
-    StateId GetId() const override;
+    StateId GetId() const override { return StateId::Idle; }
 };
 
 #endif

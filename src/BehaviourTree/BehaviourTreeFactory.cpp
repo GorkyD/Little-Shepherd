@@ -69,7 +69,7 @@ std::unique_ptr<Selector> BehaviourTreeFactory::BuildSearchDangerSequence(BaseNp
     searchAndCheck.push_back(std::make_unique<CheckForThreatNode>());
     searchAndCheck.push_back(std::make_unique<ApplyEffectNode>(action));
     
-    auto engageThreat = std::make_unique<EngageThreatSequence>();
+    auto engageThreat = std::make_unique<EngageThreatSequence>(action);
     
     auto root = std::vector<std::unique_ptr<Node>>();
     root.push_back(std::move(engageThreat));

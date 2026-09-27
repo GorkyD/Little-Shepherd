@@ -25,7 +25,7 @@ void CharacterAnimator::SetDirection(const Vector2 delta)
         angle += 360.0f;
 
     const int sector = static_cast<int>((angle + 22.5f) / 45.0f) % 8;
-    
+
     static constexpr int rows[8]   = { 2, 1, 0, 1, 2, 3, 4, 3 };
     static constexpr bool flips[8] = { true, true, true, false, false, false, true, true };
 
@@ -35,7 +35,7 @@ void CharacterAnimator::SetDirection(const Vector2 delta)
 
 void CharacterAnimator::Update(const float dt)
 {
-    const SpriteSheet& sheet = GetSpriteSheet(currentClip);
+    const SpriteSheet& sheet = GetSpriteSheet(spriteFolder, spritePrefix, currentClip);
 
     frameTimer += dt;
     if (frameTimer >= frameDuration)
@@ -62,9 +62,15 @@ bool CharacterAnimator::ConsumeJustLooped()
     return result;
 }
 
+bool CharacterAnimator::IsFinished() const
+{
+    const SpriteSheet& sheet = GetSpriteSheet(spriteFolder, spritePrefix, currentClip);
+    return !loop && frameIndex >= sheet.columns - 1;
+}
+
 void CharacterAnimator::Draw(const Vector2 screenCenter) const
 {
-    const SpriteSheet& sheet = GetSpriteSheet(currentClip);
+    const SpriteSheet& sheet = GetSpriteSheet(spriteFolder, spritePrefix, currentClip);
 
     Rectangle source = {
         frameIndex * SpriteSheet::FrameSize,
@@ -76,9 +82,8 @@ void CharacterAnimator::Draw(const Vector2 screenCenter) const
     if (flip)
         source.width = -source.width;
 
-    constexpr float drawSize = 96.0f;
     const Rectangle dest = { screenCenter.x, screenCenter.y, drawSize, drawSize };
-    constexpr Vector2 origin = { drawSize / 2.0f, drawSize };
+    const Vector2 origin = { drawSize / 2.0f, drawSize };
 
     DrawTexturePro(sheet.texture, source, dest, origin, 0.0f, WHITE);
 }

@@ -4,6 +4,8 @@
 #include "raylib.h"
 #include "Input/InputSystem.h"
 
+class World;
+
 class CameraController
 {
     std::shared_ptr<InputSystem> inputSystem;
@@ -14,7 +16,7 @@ class CameraController
 
 public:
     CameraController(std::shared_ptr<InputSystem> inputSystem) : inputSystem(std::move(inputSystem)){}
-    void Start(Vector2 boundsMin, Vector2 boundsMax);
+    void Start(const World& world);
     void Update();
     Camera2D Get() const;
 };

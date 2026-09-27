@@ -2,14 +2,13 @@
 #define WILDLIFESIM_NPCSTATUSICONSYSTEM_H
 
 #include <memory>
-#include <vector>
 
 class BaseNpc;
 
 class NpcStatusIconSystem
 {
 public:
-    void Draw(const std::vector<std::shared_ptr<BaseNpc>>& npcs) const;
+    void DrawFor(const std::shared_ptr<BaseNpc>& npc) const;
 };
 
 #endif

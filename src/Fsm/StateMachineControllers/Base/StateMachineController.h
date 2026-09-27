@@ -17,6 +17,9 @@ public:
     virtual void Initialize();
     virtual void SetTransitionTable() = 0;
     virtual void Update();
+
+protected:
+    void ChangeState(std::unique_ptr<State> state) const { stateMachine->ChangeState(std::move(state)); }
 };
 
 #endif

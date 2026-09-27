@@ -1,5 +1,6 @@
 ﻿#include "Game.h"
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include "Astar/Astar.h"
 #include "Astar/Domains/GridDomain.h"
@@ -33,11 +34,27 @@
 
 void Game::Start()
 {
+    InitWindow();
+    InitWorld();
+    InitPathfinding();
+    InitNpcs();
+    InitTimeSystem();
+    InitCamera();
+    InitInteractMode();
+    InitHud();
+    InitPlayerInteraction();
+}
+
+void Game::InitWindow()
+{
     auto window = std::make_shared<Window>();
     window->InitializeWindow();
-    
+
     inputSystem = std::make_shared<InputSystem>(std::make_unique<PcInputStrategy>());
-    
+}
+
+void Game::InitWorld()
+{
     world = std::make_shared<World>();
     world->SetMap(ASSETS_DIR "Maps/Map.txt");
     world->SetZoneEntrance(ZoneType::Barn, GridPos{12, 5});
@@ -46,19 +63,25 @@ void Game::Start()
         world->SetZoneEntrance(ZoneType::Water, tile);
 
     renderer = std::make_shared<RenderSystem>(world);
-    
+}
+
+void Game::InitPathfinding()
+{
     eventBus = std::make_shared<EventBus>();
-    
+
     GridDomain domain = GridDomain(world);
     astar = std::make_shared<Astar<GridPos,GridDomain>>(domain);
-    
-    auto startPoint = world->GetApproachTarget(ZoneType::Barn,GridPos(0,0));
-    
+}
+
+void Game::InitNpcs()
+{
+    auto startPoint = world->GetApproachTarget(ZoneType::Barn, GridPos(0, 0));
+
     baseNpcs.push_back(std::make_shared<Farmer>(startPoint.value(), "Farmer1", "Brave"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter1", "Coward"));
-    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter2"));
-    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter3"));
-    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter4"));
+    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter2", "Brave"));
+    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter3", "Brave"));
+    baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter4", "Brave"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter5"));
     baseNpcs.push_back(std::make_shared<WoodCutter>(startPoint.value(), "WoodCutter6"));
     baseNpcs.push_back(std::make_shared<Fisherman>(startPoint.value(), "Fisherman1"));
@@ -75,7 +98,7 @@ void Game::Start()
     baseNpcs[5]->Start(world,forestWorkerActions);
     baseNpcs[6]->Start(world, forestWorkerActions);
     baseNpcs[7]->Start(world,fishermanActions);
-    
+
     for (const auto& npc : baseNpcs)
     {
         world->RegisterAgent(npc);
@@ -86,88 +109,138 @@ void Game::Start()
                 self->Replan(astar);
         });
     }
-    
+}
+
+void Game::InitTimeSystem()
+{
     timeSystem = std::make_shared<TimeSystem>(world, eventBus);
     timeSystem->Start();
+}
 
-    const Vector2 c1 = Grid::ToScreen(0, 0);
-    const Vector2 c2 = Grid::ToScreen(world->GetWorldWidth() - 1, 0);
-    const Vector2 c3 = Grid::ToScreen(0, world->GetWorldHeight() - 1);
-    const Vector2 c4 = Grid::ToScreen(world->GetWorldWidth() - 1, world->GetWorldHeight() - 1);
-
-    const Vector2 boundsMin = { std::min({c1.x, c2.x, c3.x, c4.x}), std::min({c1.y, c2.y, c3.y, c4.y}) };
-    const Vector2 boundsMax = { std::max({c1.x, c2.x, c3.x, c4.x}), std::max({c1.y, c2.y, c3.y, c4.y}) };
-
+void Game::InitCamera()
+{
     cameraController = std::make_shared<CameraController>(inputSystem);
-    cameraController->Start(boundsMin, boundsMax);
-    
+    cameraController->Start(*world);
+}
+
+void Game::InitInteractMode()
+{
     interactModeState = std::make_shared<InteractModeState>();
     interactModeState->SetCurrentType(InteractType::Drag);
-    
+
     switchModeSystem = std::make_unique<SwitchModeSystem>(interactModeState, inputSystem, eventBus);
-    
+}
+
+void Game::InitHud()
+{
     proceduralBackground = std::make_unique<ProceduralBackground>(timeSystem, world);
     hudSystem = std::make_unique<HudSystem>(interactModeState);
     npcStatusIconSystem = std::make_unique<NpcStatusIconSystem>();
-    
-    playerInteractSystem = std::make_shared<PlayerInteractSystem>(interactModeState,cameraController, inputSystem, GetNpc(), astar, world);
+}
+
+void Game::InitPlayerInteraction()
+{
+    playerInteractSystem = std::make_shared<PlayerInteractSystem>(interactModeState,cameraController, inputSystem, GetNpc(), astar, world, wolves);
     playerInteractSystem->OnInteractSystemSelect();
-    
+
     eventBus->Subscribe(EventType::OnPlayerInteractModeChange, playerInteractSystem,[&](const std::shared_ptr<PlayerInteractSystem>& self){ self->OnInteractSystemSelect(); });
 }
 
 void Game::Update()
 {
-    cameraController->Update();
-    timeSystem->Update();
-
-    switchModeSystem->Update();
-    
-    proceduralBackground->DrawProceduralBackground();
-    hudSystem->Update();
+    UpdateSystems();
+    UpdateBackgroundAndHud();
 
     BeginMode2D(cameraController->Get());
 
     renderer->Update();
-    
-    for (const auto& npc : baseNpcs)
-        npc->Update(astar, renderer);
-    
-    std::ranges::sort(baseNpcs, 
-    [](const std::shared_ptr<BaseNpc>& first, const std::shared_ptr<BaseNpc>& second)
-    {
-        return first->GetActualPosition().y < second->GetActualPosition().y;
-    });
-    
-    const auto barnFrontDepth = renderer->GetBarnBuildingFrontDepth();
 
-    const auto npcDepth = [](const std::shared_ptr<BaseNpc>& npc)
-    {
-        const GridPos grid = Grid::ToGrid(npc->GetActualPosition());
-        return grid.row + grid.col;
-    };
+    DepthSortedRenderer sceneQueue;
 
-    for (const auto& npc : baseNpcs)
-        if (!barnFrontDepth.has_value() || npcDepth(npc) <= *barnFrontDepth)
-            npc->UpdateDraw();
+    const bool anyoneSleeping = UpdateNpcs(sceneQueue);
+    UpdateWolves(sceneQueue);
+    QueueTrees(sceneQueue);
+    QueueBarn(sceneQueue, anyoneSleeping);
 
-    renderer->DrawBarnBuilding();
-
-    const bool anyoneSleeping = std::ranges::any_of(baseNpcs, [](const std::shared_ptr<BaseNpc>& npc)
-    {
-        return npc->GetCurrentActionName() == "Sleep";
-    });
-
-    if (anyoneSleeping)
-        renderer->DrawSleepIndicator();
-
-    for (const auto& npc : baseNpcs)
-        if (barnFrontDepth.has_value() && npcDepth(npc) > *barnFrontDepth)
-            npc->UpdateDraw();
-
-    npcStatusIconSystem->Draw(baseNpcs);
+    sceneQueue.Flush();
 
     playerInteractSystem->UpdateCurrentInteractable();
-    
+
     EndMode2D();
+}
+
+void Game::UpdateSystems()
+{
+    cameraController->Update();
+    timeSystem->Update();
+    switchModeSystem->Update();
+}
+
+void Game::UpdateBackgroundAndHud()
+{
+    proceduralBackground->DrawProceduralBackground();
+    hudSystem->Update();
+}
+
+bool Game::UpdateNpcs(DepthSortedRenderer& sceneQueue)
+{
+    bool anyoneSleeping = false;
+
+    for (const auto& npc : baseNpcs)
+    {
+        npc->Update(astar, renderer);
+
+        if (npc->GetCurrentActionName() == "Sleep")
+            anyoneSleeping = true;
+
+        sceneQueue.Add(npc->GetActualPosition().y, [this, npc]()
+        {
+            npc->UpdateDraw();
+            npcStatusIconSystem->DrawFor(npc);
+        });
+    }
+
+    return anyoneSleeping;
+}
+
+void Game::UpdateWolves(DepthSortedRenderer& sceneQueue)
+{
+    for (const auto& wolf : *wolves)
+        wolf->Update(GetFrameTime(), astar, baseNpcs);
+
+    for (const auto& wolf : *wolves)
+        sceneQueue.Add(wolf->GetActualPosition().y, [wolf]() { wolf->Draw(); });
+
+    std::erase_if(*wolves, [](const std::shared_ptr<Wolf>& wolf) { return wolf->IsReadyToRemove(); });
+}
+
+void Game::QueueTrees(DepthSortedRenderer& sceneQueue) const
+{
+    for (const auto& treePos : world->GetTilesOfType(ZoneType::Forest))
+    {
+        Tile& tile = world->GetTile(treePos.row, treePos.col);
+
+        if (tile.treeVariant < 0)
+            continue;
+
+        const Vector2 center = Grid::ToScreen(treePos);
+
+        sceneQueue.Add(center.y, [this, center, &tile]() { renderer->DrawTree(center, tile); });
+    }
+}
+
+void Game::QueueBarn(DepthSortedRenderer& sceneQueue, const bool anyoneSleeping) const
+{
+    const auto barnAnchorY = renderer->GetBarnBuildingAnchorY();
+
+    if (!barnAnchorY.has_value())
+        return;
+
+    sceneQueue.Add(*barnAnchorY, [this, anyoneSleeping]()
+    {
+        renderer->DrawBarnBuilding();
+
+        if (anyoneSleeping)
+            renderer->DrawSleepIndicator();
+    });
 }

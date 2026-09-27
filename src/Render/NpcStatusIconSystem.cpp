@@ -24,7 +24,7 @@ namespace
         return texture;
     }
 
-    void DrawTextureIcon(Texture2D texture, Vector2 anchor, bool isMirroredY = false)
+    void DrawTextureIcon(Texture2D texture, Vector2 anchor, bool isMirroredY = false, Color tint = WHITE)
     {
         if (texture.id == 0)
             return;
@@ -37,19 +37,21 @@ namespace
         const Rectangle dest = { anchor.x, anchor.y + IconYOffset, destWidth, destHeight };
         const Vector2 origin = { destWidth / 2.0f, destHeight / 2.0f };
 
-        DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
+        DrawTexturePro(texture, source, dest, origin, 0.0f, tint);
     }
 }
 
-void NpcStatusIconSystem::Draw(const std::vector<std::shared_ptr<BaseNpc>>& npcs) const
+void NpcStatusIconSystem::DrawFor(const std::shared_ptr<BaseNpc>& npc) const
 {
-    for (const auto& npc : npcs)
-    {
-        const std::string& action = npc->GetCurrentActionName();
+    const std::string& action = npc->GetCurrentActionName();
 
-        if (action == "RunAwayFromDanger" || action == "RunAwayFromFire")
-            DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Help.png"), npc->GetActualPosition());
-        else if (action == "SearchDanger" || action == "GetWater" || action == "ExtinguishFire")
-            DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Info.png"), npc->GetActualPosition(), true);
+    if (action == "RunAwayFromDanger" || action == "RunAwayFromFire")
+    {
+        DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Help.png"), npc->GetActualPosition());
+    }
+    else if (action == "SearchDanger" || action == "GetWater" || action == "ExtinguishFire")
+    {
+        const bool fighting = action == "SearchDanger" && npc->GetKnownThreat() != nullptr;
+        DrawTextureIcon(GetIconTexture("Icon_Small_Blank_Info.png"), npc->GetActualPosition(), true, fighting ? RED : WHITE);
     }
 }

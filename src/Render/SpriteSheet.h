@@ -13,6 +13,6 @@ struct SpriteSheet
     int columns = 1;
 };
 
-const SpriteSheet& GetSpriteSheet(const std::string& clipName);
+const SpriteSheet& GetSpriteSheet(const std::string& folder, const std::string& prefix, const std::string& clipName);
 
 #endif

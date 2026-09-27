@@ -7,6 +7,7 @@
 #include "Goap/WorldState.h"
 #include "BehaviourTree/Sequence.h"
 #include "BehaviourTree/WaitNode.h"
+#include "Enemies/Wolf.h"
 #include "Extension/Extension.h"
 #include "Goap/Goals/Npc/Extinguish.h"
 #include "Goap/Goals/Npc/SafeGoal.h"
@@ -129,9 +130,7 @@ void BaseNpc::Start(const std::shared_ptr<World>& world, std::vector<Action> act
 
 void BaseNpc::Replan(const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
 {
-    if (reservedTile)
-        world->GetTile(reservedTile->row,reservedTile->col).isBusy = false;
-    
+    ReleaseReservedTile();
     WorldStep(astar);
 }
 
@@ -301,9 +300,78 @@ void BaseNpc::ReportFireSighting(bool sawFire, std::optional<GridPos> tile, cons
         Replan(astar);
 }
 
-void BaseNpc::ReportThreatNearby(bool detected)
+void BaseNpc::ReportThreatNearby(std::optional<std::weak_ptr<Wolf>> threat, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
 {
-    nearbyThreatDetected = detected;
+    if (threat.has_value())
+        knownThreat = threat.value();
+
+    if (!IsKnownThreatAlive())
+        knownThreat.reset();
+
+    nearbyThreatDetected = knownThreat.lock() != nullptr;
+
+    if (!nearbyThreatDetected)
+        return;
+
+    const bool wasInDanger = currentState.isInDanger;
+    currentState.isInDanger = true;
+
+    if (!wasInDanger)
+        Replan(astar);
+}
+
+bool BaseNpc::IsKnownThreatAlive() const
+{
+    const auto threat = knownThreat.lock();
+
+    if (!threat || threat->IsDead())
+        return false;
+
+    constexpr int maxTrackDistance = 12;
+    const GridPos threatPos = threat->GetPosition();
+    const int distance = std::abs(threatPos.row - position.row) + std::abs(threatPos.col - position.col);
+
+    return distance <= maxTrackDistance;
+}
+
+bool BaseNpc::BeginApproachMove(GridPos target, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)
+{
+    auto tile = world->GetWalkableNeighbor(target, position);
+
+    if (!tile.has_value())
+        return false;
+
+    return BeginMove(*tile, astar);
+}
+
+void BaseNpc::ClaimCombatTile()
+{
+    if (reservedTile && *reservedTile == position)
+        return;
+
+    ReleaseReservedTile();
+
+    reservedTile = position;
+    world->GetTile(position.row, position.col).isBusy = true;
+}
+
+void BaseNpc::ReleaseReservedTile()
+{
+    if (reservedTile)
+    {
+        world->GetTile(reservedTile->row, reservedTile->col).isBusy = false;
+        reservedTile.reset();
+    }
+}
+
+void BaseNpc::FacePosition(GridPos target)
+{
+    animator.SetDirection(Vector2Subtract(Grid::ToScreen(target), Grid::ToScreen(position)));
+}
+
+bool BaseNpc::ConsumeAttackTick()
+{
+    return animator.ConsumeJustLooped();
 }
 
 void BaseNpc::ReportNearbyAlarm(bool sawAlarmedNpc, const std::shared_ptr<Astar<GridPos,GridDomain>>& astar)

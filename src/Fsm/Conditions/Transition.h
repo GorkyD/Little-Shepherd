@@ -7,7 +7,7 @@
 
 enum class StateId;
 
-struct  Transition
+struct Transition
 {
     StateId targetId;
     std::function<bool()> condition;

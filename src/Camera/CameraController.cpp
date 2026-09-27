@@ -1,8 +1,31 @@
 #include "CameraController.h"
+#include <algorithm>
+#include <utility>
 #include "raymath.h"
+#include "World/Grid.h"
+#include "World/World.h"
 
-void CameraController::Start(const Vector2 min, const Vector2 max)
+namespace
 {
+    std::pair<Vector2, Vector2> ComputeWorldBounds(const World& world)
+    {
+        const Vector2 c1 = Grid::ToScreen(0, 0);
+        const Vector2 c2 = Grid::ToScreen(world.GetWorldWidth() - 1, 0);
+        const Vector2 c3 = Grid::ToScreen(0, world.GetWorldHeight() - 1);
+        const Vector2 c4 = Grid::ToScreen(world.GetWorldWidth() - 1, world.GetWorldHeight() - 1);
+
+        return
+        {
+            Vector2{ std::min({c1.x, c2.x, c3.x, c4.x}), std::min({c1.y, c2.y, c3.y, c4.y}) },
+            Vector2{ std::max({c1.x, c2.x, c3.x, c4.x}), std::max({c1.y, c2.y, c3.y, c4.y}) }
+        };
+    }
+}
+
+void CameraController::Start(const World& world)
+{
+    const auto [min, max] = ComputeWorldBounds(world);
+
     boundsMin = min;
     boundsMax = max;
     camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };

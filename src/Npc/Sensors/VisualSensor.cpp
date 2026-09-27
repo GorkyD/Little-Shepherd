@@ -1,6 +1,7 @@
 #include "VisualSensor.h"
 #include <cmath>
 #include "raymath.h"
+#include "Enemies/Wolf.h"
 #include "Npc/BaseNpc.h"
 #include "World/Grid.h"
 #include "World/World.h"
@@ -13,12 +14,10 @@ VisualSensor::VisualSensor(const int radius, const float coneAngleDegrees) : rad
 
 void VisualSensor::Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const std::shared_ptr<Astar<GridPos, GridDomain>>& astar)
 {
-    if (npc->GetKnownFireTile().has_value())
-    {
+    const bool trackingKnownFire = npc->GetKnownFireTile().has_value();
+
+    if (trackingKnownFire)
         npc->ReportFireSighting(npc->IsKnownFireStillBurning(), npc->GetKnownFireTile(), astar);
-        npc->ReportThreatNearby(false);
-        return;
-    }
 
     const GridPos origin = npc->position;
     const Vector2 originScreen = Grid::ToScreen(origin);
@@ -45,34 +44,39 @@ void VisualSensor::Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const
         return cosAngle >= halfAngleCos;
     };
 
-    bool fireVisible = false;
-    std::optional<GridPos> nearestFireTile;
-    int bestFireDistance = 0;
-
-    const int width = world->GetWorldWidth();
-    const int height = world->GetWorldHeight();
-
-    for (int row = 0; row < width; row++)
+    if (!trackingKnownFire)
     {
-        for (int col = 0; col < height; col++)
+        bool fireVisible = false;
+        std::optional<GridPos> nearestFireTile;
+        int bestFireDistance = 0;
+
+        const int width = world->GetWorldWidth();
+        const int height = world->GetWorldHeight();
+
+        for (int row = 0; row < width; row++)
         {
-            const GridPos candidate{ row, col };
-            int distance = 0;
-
-            if (!isVisible(candidate, distance))
-                continue;
-
-            if (world->GetTile(candidate.row, candidate.col).onFire)
+            for (int col = 0; col < height; col++)
             {
-                fireVisible = true;
+                const GridPos candidate{ row, col };
+                int distance = 0;
 
-                if (!nearestFireTile.has_value() || distance < bestFireDistance)
+                if (!isVisible(candidate, distance))
+                    continue;
+
+                if (world->GetTile(candidate.row, candidate.col).onFire)
                 {
-                    nearestFireTile = candidate;
-                    bestFireDistance = distance;
+                    fireVisible = true;
+
+                    if (!nearestFireTile.has_value() || distance < bestFireDistance)
+                    {
+                        nearestFireTile = candidate;
+                        bestFireDistance = distance;
+                    }
                 }
             }
         }
+
+        npc->ReportFireSighting(fireVisible, nearestFireTile, astar);
     }
 
     bool alarmedNpcVisible = false;
@@ -99,7 +103,26 @@ void VisualSensor::Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const
         }
     }
 
-    npc->ReportFireSighting(fireVisible, nearestFireTile, astar);
+    std::optional<std::weak_ptr<Wolf>> nearestWolf;
+    int bestWolfDistance = 0;
+
+    for (const auto& enemy : world->GetEnemies())
+    {
+        if (enemy->IsDead())
+            continue;
+
+        int distance = 0;
+
+        if (!isVisible(enemy->GetPosition(), distance))
+            continue;
+
+        if (!nearestWolf.has_value() || distance < bestWolfDistance)
+        {
+            nearestWolf = std::weak_ptr<Wolf>(enemy);
+            bestWolfDistance = distance;
+        }
+    }
+
     npc->ReportNearbyAlarm(alarmedNpcVisible, astar);
-    npc->ReportThreatNearby(false);
+    npc->ReportThreatNearby(nearestWolf, astar);
 }

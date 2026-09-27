@@ -32,6 +32,12 @@ add_executable(
         src/Fsm/States/Wolf/IdleState.cpp
         src/Fsm/States/Wolf/SearchingState.h
         src/Fsm/States/Wolf/SearchingState.cpp
+        src/Fsm/States/Wolf/ChaseState.h
+        src/Fsm/States/Wolf/ChaseState.cpp
+        src/Fsm/States/Wolf/AttackState.h
+        src/Fsm/States/Wolf/AttackState.cpp
+        src/Fsm/States/Wolf/DeathState.h
+        src/Fsm/States/Wolf/DeathState.cpp
         src/Fsm/States/State.h
         src/Fsm/StateId.h
         src/Fsm/StateMachine.h
@@ -46,6 +52,7 @@ add_executable(
         src/Render/CharacterAnimator.cpp
         src/Render/TileAtlas.h
         src/Render/TileAtlas.cpp
+        src/Render/DepthSortedRenderer.h
         src/Render/NpcStatusIconSystem.h
         src/Render/NpcStatusIconSystem.cpp
         src/NPC/BaseNpc.h

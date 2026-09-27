@@ -5,6 +5,7 @@
 #include <iostream>
 #include <random>
 #include "Grid.h"
+#include "Enemies/Wolf.h"
 #include "Npc/BaseNpc.h"
 
 World::World() = default;
@@ -265,6 +266,13 @@ std::vector<GridPos> World::GetZoneAdjacentWalkableTiles(const ZoneType type) co
     return result;
 }
 
+const std::vector<GridPos>& World::GetTilesOfType(const ZoneType type) const
+{
+    static const std::vector<GridPos> empty;
+    const auto it = zoneTiles.find(type);
+    return it != zoneTiles.end() ? it->second : empty;
+}
+
 ZoneType World::GetZoneAt(const GridPos pos) const
 {
     for (const auto& [zone, entrances] : zoneEntrances)
@@ -395,4 +403,21 @@ bool World::IsAnyAgentSearchingDanger() const
                 return true;
 
     return false;
+}
+
+void World::RegisterEnemy(const std::shared_ptr<Wolf>& enemy)
+{
+    enemies.push_back(enemy);
+}
+
+std::vector<std::shared_ptr<Wolf>> World::GetEnemies() const
+{
+    std::vector<std::shared_ptr<Wolf>> result;
+    result.reserve(enemies.size());
+
+    for (const auto& enemy : enemies)
+        if (auto locked = enemy.lock())
+            result.push_back(std::move(locked));
+
+    return result;
 }

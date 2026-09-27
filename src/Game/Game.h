@@ -5,12 +5,13 @@
 #include "Astar/Astar.h"
 #include "Astar/Domains/GridDomain.h"
 #include "Camera/CameraController.h"
+#include "Enemies/Wolf.h"
 #include "EventBus/EventBus.h"
 #include "Input/InputSystem.h"
 #include "NPC/BaseNpc.h"
-#include "Player/ObjectMoveSystem.h"
 #include "Player/PlayerInteractSystem.h"
 #include "Player/SwitchModeSystem.h"
+#include "Render/DepthSortedRenderer.h"
 #include "Render/RenderSystem.h"
 #include "Render/Background/ProceduralBackground.h"
 #include "Render/Hud/HudSystem.h"
@@ -25,6 +26,7 @@ class Game
     std::unique_ptr<NpcStatusIconSystem> npcStatusIconSystem;
 
     std::vector<std::shared_ptr<BaseNpc>> baseNpcs;
+    std::shared_ptr<std::vector<std::shared_ptr<Wolf>>> wolves = std::make_shared<std::vector<std::shared_ptr<Wolf>>>();
 
     std::shared_ptr<PlayerInteractSystem> playerInteractSystem;
     std::shared_ptr<InteractModeState> interactModeState;
@@ -38,9 +40,26 @@ class Game
     
     std::vector<std::shared_ptr<BaseNpc>> GetNpc() { return baseNpcs; }
 
+    void InitWindow();
+    void InitWorld();
+    void InitPathfinding();
+    void InitNpcs();
+    void InitTimeSystem();
+    void InitCamera();
+    void InitInteractMode();
+    void InitHud();
+    void InitPlayerInteraction();
+
+    void UpdateSystems();
+    void UpdateBackgroundAndHud();
+    bool UpdateNpcs(DepthSortedRenderer& sceneQueue);
+    void UpdateWolves(DepthSortedRenderer& sceneQueue);
+    void QueueTrees(DepthSortedRenderer& sceneQueue) const;
+    void QueueBarn(DepthSortedRenderer& sceneQueue, bool anyoneSleeping) const;
+
 public:
     Game() = default;
-    
+
     void Start();
     void Update();
 };
