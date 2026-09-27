@@ -30,6 +30,8 @@ bool BaseEnemy::BeginMove(GridPos target, const std::shared_ptr<Astar<GridPos, G
     currentPath = BuildSplinePath(path, world);
     segmentIndex = 0;
     segmentTimer = 0.0f;
+    catchUpFrom = actualPosition;
+    catchingUp = currentPath.SegmentCount() > 0;
     return !currentPath.IsEmpty();
 }
 
@@ -49,20 +51,34 @@ void BaseEnemy::AdvanceMove(const float dt)
     segmentTimer += dt;
     float t = segmentTimer / SegmentDuration;
 
-    if (t >= 1.0f)
-    {
-        t = 1.0f;
-        position = currentPath.NodeAt(segmentIndex + 1);
+    Vector2 newPos;
 
-        if (segmentIndex + 1 < currentPath.SegmentCount())
+    if (catchingUp)
+    {
+        if (t >= 1.0f)
         {
-            segmentIndex++;
+            t = 1.0f;
+            catchingUp = false;
             segmentTimer = 0.0f;
-            t = 0.0f;
         }
+
+        const Vector2 graphStart = currentPath.Evaluate(0, 0.0f);
+        if (t >= 1.0f)
+        {
+            t = 1.0f;
+            position = currentPath.NodeAt(segmentIndex + 1);
+
+            if (segmentIndex + 1 < currentPath.SegmentCount())
+            {
+                segmentIndex++;
+                segmentTimer = 0.0f;
+                t = 0.0f;
+            }
+        }
+
+        newPos = currentPath.Evaluate(segmentIndex, t);
     }
 
-    const Vector2 newPos = currentPath.Evaluate(segmentIndex, t);
     const Vector2 delta = Vector2Subtract(newPos, actualPosition);
 
     if (delta.x != 0.0f || delta.y != 0.0f)
@@ -70,7 +86,7 @@ void BaseEnemy::AdvanceMove(const float dt)
 
     actualPosition = newPos;
 
-    const bool reachedEnd = (segmentIndex + 1 == currentPath.SegmentCount()) && t >= 1.0f;
+    const bool reachedEnd = !catchingUp && (segmentIndex + 1 == currentPath.SegmentCount()) && t >= 1.0f;
 
     if (reachedEnd)
         currentPath = SplinePath{};

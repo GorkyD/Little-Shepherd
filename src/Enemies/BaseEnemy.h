@@ -21,11 +21,13 @@ protected:
     SplinePath currentPath;
     GridPos position{};
     size_t segmentIndex = 0;
-    
+
     Vector2 lastMoveDirection{ 0.0f, 1.0f };
     Vector2 actualPosition{};
-    
+    Vector2 catchUpFrom{};
+
     float segmentTimer = 0.0f;
+    bool catchingUp = false;
     
     int currentHealth = 0;
     int maxHealth = 100;
