@@ -37,7 +37,9 @@ class Game
     std::shared_ptr<TimeSystem> timeSystem;
     std::shared_ptr<EventBus> eventBus;
     std::shared_ptr<World> world;
-    
+
+    bool showSensorDebug = false;
+
     std::vector<std::shared_ptr<BaseNpc>> GetNpc() { return baseNpcs; }
 
     void InitWindow();
@@ -56,6 +58,7 @@ class Game
     void UpdateWolves(DepthSortedRenderer& sceneQueue);
     void QueueTrees(DepthSortedRenderer& sceneQueue) const;
     void QueueBarn(DepthSortedRenderer& sceneQueue, bool anyoneSleeping) const;
+    void DrawSensorDebug() const;
 
 public:
     Game() = default;

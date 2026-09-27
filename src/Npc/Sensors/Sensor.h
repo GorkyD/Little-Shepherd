@@ -14,6 +14,7 @@ class Sensor
 public:
     virtual ~Sensor() = default;
     virtual void Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const std::shared_ptr<Astar<GridPos, GridDomain>>& astar) = 0;
+    virtual void DrawDebug(const BaseNpc* npc) const {}
 };
 
 #endif

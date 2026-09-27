@@ -164,6 +164,9 @@ void Game::Update()
 
     sceneQueue.Flush();
 
+    if (showSensorDebug)
+        DrawSensorDebug();
+
     playerInteractSystem->UpdateCurrentInteractable();
 
     EndMode2D();
@@ -174,6 +177,9 @@ void Game::UpdateSystems()
     cameraController->Update();
     timeSystem->Update();
     switchModeSystem->Update();
+
+    if (IsKeyPressed(KEY_F1))
+        showSensorDebug = !showSensorDebug;
 }
 
 void Game::UpdateBackgroundAndHud()
@@ -243,4 +249,10 @@ void Game::QueueBarn(DepthSortedRenderer& sceneQueue, const bool anyoneSleeping)
         if (anyoneSleeping)
             renderer->DrawSleepIndicator();
     });
+}
+
+void Game::DrawSensorDebug() const
+{
+    for (const auto& npc : baseNpcs)
+        npc->DrawSensorDebug();
 }

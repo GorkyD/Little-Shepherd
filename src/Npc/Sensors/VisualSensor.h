@@ -6,12 +6,14 @@
 class VisualSensor : public Sensor
 {
     int radius;
+    float coneAngleDegrees;
     float halfAngleCos;
 
 public:
     explicit VisualSensor(int radius = 5, float coneAngleDegrees = 120.0f);
 
     void Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const std::shared_ptr<Astar<GridPos, GridDomain>>& astar) override;
+    void DrawDebug(const BaseNpc* npc) const override;
 };
 
 #endif

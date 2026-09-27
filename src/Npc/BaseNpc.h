@@ -72,6 +72,7 @@ public:
     virtual void WaitNodeUpdate(std::string actionName) = 0;
 
     void UpdateDraw() const;
+    void DrawSensorDebug() const { if (visionSensor) visionSensor->DrawDebug(this); }
     void Start(const std::shared_ptr<World>& world, std::vector<Action> actions);
     void Replan(const std::shared_ptr<Astar<GridPos,GridDomain>>& astar);
     void ApplyActionEffect(const Action* action);

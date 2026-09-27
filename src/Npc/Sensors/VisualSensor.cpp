@@ -6,10 +6,25 @@
 #include "World/Grid.h"
 #include "World/World.h"
 
-VisualSensor::VisualSensor(const int radius, const float coneAngleDegrees) : radius(radius)
+VisualSensor::VisualSensor(const int radius, const float coneAngleDegrees) : radius(radius), coneAngleDegrees(coneAngleDegrees)
 {
     const float halfAngleRad = (coneAngleDegrees / 2.0f) * (PI / 180.0f);
     halfAngleCos = std::cos(halfAngleRad);
+}
+
+void VisualSensor::DrawDebug(const BaseNpc* npc) const
+{
+    const Vector2 origin = Grid::ToScreen(npc->position);
+
+    const Vector2 facingRaw = npc->GetLastMoveDirection();
+    const Vector2 facing = Vector2LengthSqr(facingRaw) > 0.0f ? Vector2Normalize(facingRaw) : Vector2{ 0.0f, 1.0f };
+
+    const float facingAngle = atan2f(facing.y, facing.x) * RAD2DEG;
+    const float halfAngle = coneAngleDegrees / 2.0f;
+    const float visualRadius = radius * Grid::TileWidth * 0.5f;
+
+    DrawCircleSector(origin, visualRadius, facingAngle - halfAngle, facingAngle + halfAngle, 24, Fade(YELLOW, 0.25f));
+    DrawCircleSectorLines(origin, visualRadius, facingAngle - halfAngle, facingAngle + halfAngle, 24, YELLOW);
 }
 
 void VisualSensor::Scan(BaseNpc* npc, const std::shared_ptr<World>& world, const std::shared_ptr<Astar<GridPos, GridDomain>>& astar)
